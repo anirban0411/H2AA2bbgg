@@ -105,7 +105,7 @@ void H2AA2bbgg_analysis_treeread_18_for_pas_t2(int mass)
     // ┌─────────────────────────────────────────────────────────────────────┐
     // │                    A N A L Y S I S   C U T S                       │
     // └─────────────────────────────────────────────────────────────────────┘
-    const float CHI2_CUT      = 10.0f;   // χ² selection threshold
+    const float CHI2_CUT      = 1.0f;   // χ² selection threshold
     const float BDT_NOM       = 0.90f;   // BDT cut: nominal + MC-scale trees
     const float BDT_SYST      = 0.90f;   // BDT cut: all other systematic trees
     const float GG_MIN        = 10.0f;   // diphoton mass lower bound [GeV]
