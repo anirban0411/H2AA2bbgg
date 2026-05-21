@@ -1,0 +1,530 @@
+#include <iostream>
+#include <fstream>
+#include <set>
+#include<TFile.h>
+#include<TTree.h>
+#include<TH1.h>
+#include<TH2.h>
+#include<THStack.h>
+#include<TGraphErrors.h>
+#include<TGraphAsymmErrors.h>
+#include<TCanvas.h>
+#include<TFrame.h>
+#include<TLegend.h>
+#include<vector>
+#include<iostream>
+#include<TMath.h>
+#include<TROOT.h>
+#include<TInterpreter.h>
+#include<TStyle.h>
+#include<TChain.h>
+#include<TString.h>
+#include<TPaveStats.h>
+#include<TPad.h>
+#include<TLatex.h>
+#include "TEfficiency.h"
+#include "TAxis.h"
+//#include "TOTTOTerror.h"
+//#include "JERerror.h"
+//#include "JESerror.h"
+#include "staterror.h"
+#include "TRandom3.h"
+#include "TBuffer.h"
+#include "TRandom2.h"
+#include "TUUID.h"
+
+
+void chi2_com_vT(){
+  Bool_t syst_on = false;
+  gStyle->SetLineWidth(2);
+  TCanvas *c1 =new TCanvas("c1", " ", 0, 0,700,800);
+
+  c1->Range(0,0,1,1);
+  c1->SetFillColor(0);
+  c1->SetBorderMode(0);
+  c1->SetBorderSize(2);
+  c1->SetFrameBorderMode(0);
+//  c1->SetGridx();
+//  c1->SetGridy();
+  c1->SetTickx(1);
+  c1->SetTicky(1);
+  c1->Draw();
+
+//  c1->SetLogy();
+
+  TPad *pad1 = new TPad("pad1", "pad1", 0, 0.3, 1, 1);
+  pad1->SetBottomMargin(0.02);
+  pad1->Draw();
+  pad1->cd();
+  pad1->SetLogy();
+//  pad1->SetGridx();
+//  pad1->SetGridy();
+  pad1->SetTickx(1);
+  pad1->SetTicky(1);
+
+
+  double lumi_16_APV = 19500;
+  double lumi_16 = 16500;
+  double lumi_17 = 41500;
+  double lumi_18 = 59730;
+
+  THStack *hs = new THStack("hs","");
+  THStack *hs_mod = new THStack("hs_mod","");
+
+  Double_t error;
+  ////////////////////Data rootfiles/////////////////////
+
+  TFile *fdata1 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/SingleElectron_v1_isEleMu.root");
+  TH1F  *h1 = (TH1F*)fdata1->Get("h_chi2");
+  h1->Rebin(4);
+  TFile *fdata2 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/SinMu_v1_isEleMu.root");
+  TH1F  *h2 = (TH1F*)fdata2->Get("h_chi2");
+  h2->Rebin(4);
+  TFile *fdata3 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/SingleElectron_v1_isEleMu.root");                           // 2016 
+  TH1F  *h3 = (TH1F*)fdata3->Get("h_chi2");
+  h3->Rebin(4);
+  TFile *fdata4 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/SinMu_v1_isEleMu.root");
+  TH1F  *h4 = (TH1F*)fdata4->Get("h_chi2");
+  h4->Rebin(4);
+  h1->Add(h2);
+  h1->Add(h3);
+  h1->Add(h4);
+
+  h1->SetBinContent(h1->GetNbinsX(), h1->GetBinContent(h1->GetNbinsX())+h1->GetBinContent(h1->GetNbinsX()+1));
+  h1->SetBinContent(1, h1->GetBinContent(1)+h1->GetBinContent(0));
+
+
+  double xmax = h1->GetXaxis()->GetXmax();
+  double xmin = h1->GetXaxis()->GetXmin();
+  double xmin1 = 0.0;
+  double xmax1 = 100.0;
+
+  //////////////////////MC files//////////////////////
+
+
+  /////////////////////////////////////////////////////////////////    2016 MC     ////////////////////////////////////////////////////////////////////////
+
+
+  double w1 = (lumi_16*4.078)/(5.0593e+06);
+  TFile *f1 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/TTGJets_v1_isEleMu.root");
+  TH1F *hmc1 = (TH1F*)f1->Get("h_chi2");
+  hmc1->Rebin(4);
+  hmc1->SetBinContent(hmc1->GetNbinsX(), hmc1->GetBinContent(hmc1->GetNbinsX())+hmc1->GetBinContent(hmc1->GetNbinsX()+1));
+  hmc1->SetBinContent(1, hmc1->GetBinContent(1)+hmc1->GetBinContent(0));
+  hmc1->Scale(w1);
+
+  double w2 = (lumi_16*365.34)/(4.28189e+10);
+  TFile *f2 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/TTSL_v1_isEleMu.root");
+  TH1F *hmc2 = (TH1F*)f2->Get("h_chi2");
+  hmc2->Rebin(4);
+  hmc2->SetBinContent(hmc2->GetNbinsX(), hmc2->GetBinContent(hmc2->GetNbinsX())+hmc2->GetBinContent(hmc2->GetNbinsX()+1));
+  hmc2->SetBinContent(1, hmc2->GetBinContent(1)+hmc2->GetBinContent(0));
+  hmc2->Scale(w2);
+
+  double w3 = (lumi_16*88.29)/(2.00013e+09);
+  TFile *f3 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/TTTo2L2Nu_v1_isEleMu.root");
+  TH1F *hmc3 = (TH1F*)f3->Get("h_chi2");
+  hmc3->Rebin(4);
+  hmc3->SetBinContent(hmc3->GetNbinsX(), hmc3->GetBinContent(hmc3->GetNbinsX())+hmc3->GetBinContent(hmc3->GetNbinsX()+1));
+  hmc3->SetBinContent(1, hmc3->GetBinContent(1)+hmc3->GetBinContent(0));
+  hmc3->Scale(w3);
+
+  double w4 = (lumi_16*5343)/(8.08308e+07);
+  TFile *f4 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/DYJetsToLL_v1_isEleMu.root");
+  TH1F *hmc4 = (TH1F*)f4->Get("h_chi2");
+  hmc4->Rebin(4);
+  hmc4->SetBinContent(hmc4->GetNbinsX(), hmc4->GetBinContent(hmc4->GetNbinsX())+hmc4->GetBinContent(hmc4->GetNbinsX()+1));
+  hmc4->SetBinContent(1, hmc4->GetBinContent(1)+hmc4->GetBinContent(0));
+  hmc4->Scale(w4);
+  
+  double w5 = (lumi_16*0.3*20)/(486982);
+  TFile *f5 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/WH_mA20_v2_isEleMu.root");
+  TH1F *hsig1 = (TH1F*)f5->Get("h_chi2");
+  hsig1->Scale(w5);
+
+  double w31 = (lumi_16*0.3*20)/(286518);
+  TFile *f31 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016/full_reg/v1/WH_mA60_v2_isEleMu.root");
+  TH1F *hsig31 = (TH1F*)f31->Get("h_chi2");
+  hsig31->Scale(w31);
+  
+  double w7 = (lumi_16_APV*4.078)/(8.50926e+06);
+  TFile *f7 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/TTGJets_v1_isEleMu.root");
+  TH1F *hmc7 = (TH1F*)f7->Get("h_chi2");
+  hmc7->Rebin(4);
+  hmc7->SetBinContent(hmc7->GetNbinsX(), hmc7->GetBinContent(hmc7->GetNbinsX())+hmc7->GetBinContent(hmc7->GetNbinsX()+1));
+  hmc7->SetBinContent(1, hmc7->GetBinContent(1)+hmc7->GetBinContent(0));
+  hmc7->Scale(w7);
+
+  double w8 = (lumi_16_APV*365.34)/(3.97048e+10);
+  TFile *f8 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/TTSL_v1_isEleMu.root");
+  TH1F *hmc8 = (TH1F*)f8->Get("h_chi2");
+  hmc8->Rebin(4);
+  hmc8->SetBinContent(hmc8->GetNbinsX(), hmc8->GetBinContent(hmc8->GetNbinsX())+hmc8->GetBinContent(hmc8->GetNbinsX()+1));
+  hmc8->SetBinContent(1, hmc8->GetBinContent(1)+hmc8->GetBinContent(0));
+  hmc8->Scale(w8);
+
+  double w9 = (lumi_16_APV*88.29)/(1.85203e+09);
+  TFile *f9 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/TTTo2L2Nu_v1_isEleMu.root");
+  TH1F *hmc9 = (TH1F*)f9->Get("h_chi2");
+  hmc9->Rebin(4);
+  hmc9->SetBinContent(hmc9->GetNbinsX(), hmc9->GetBinContent(hmc9->GetNbinsX())+hmc9->GetBinContent(hmc9->GetNbinsX()+1));
+  hmc9->SetBinContent(1, hmc9->GetBinContent(1)+hmc9->GetBinContent(0));
+  hmc9->Scale(w9);
+
+  double w10 = (lumi_16_APV*5343)/(7.53999e+07);
+  TFile *f10 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/DYJetsToLL_v1_isEleMu.root");
+  TH1F *hmc10 = (TH1F*)f10->Get("h_chi2");
+  hmc10->Rebin(4);
+  hmc10->SetBinContent(hmc10->GetNbinsX(), hmc10->GetBinContent(hmc10->GetNbinsX())+hmc10->GetBinContent(hmc10->GetNbinsX()+1));
+  hmc10->SetBinContent(1, hmc10->GetBinContent(1)+hmc10->GetBinContent(0));
+  hmc10->Scale(w10);
+
+  double w11 = (lumi_16_APV*0.3*20)/(324393);
+  TFile *f11 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/WH_mA20_v2_isEleMu.root");
+  TH1F *hsig3 = (TH1F*)f11->Get("h_chi2");
+  hsig3->Scale(w11);
+
+  double w32 = (lumi_16_APV*0.3*20)/(385288);
+  TFile *f32 = TFile::Open("/home/anirban/data/hh/workspace/analysis/root_file/WH_2016APV/full_reg/v1/WH_mA60_v2_isEleMu.root");
+  TH1F *hsig32 = (TH1F*)f32->Get("h_chi2");
+  hsig32->Scale(w32);
+
+
+
+
+  TH1F *totalMC = (TH1F*)hmc1->Clone();
+  totalMC->Add(hmc2);
+  totalMC->Add(hmc3);
+  totalMC->Add(hmc4);
+  totalMC->Add(hmc7);
+  totalMC->Add(hmc8);
+  totalMC->Add(hmc9);
+  totalMC->Add(hmc10);
+
+
+
+  hmc1->Add(hmc7);
+  hmc2->Add(hmc8);
+  hmc3->Add(hmc9);
+  hmc4->Add(hmc10);
+  hsig1->Add(hsig3);
+//  hsig2->Add(hsig4);
+//  hsig2->Add(hsig6);
+//  hsig2->Add(hsig8);
+  hsig31->Add(hsig32);
+
+  totalMC->SetFillColor(14);
+  gStyle->SetHatchesSpacing(0.7);
+  gStyle->SetHatchesLineWidth(1.);
+  totalMC->SetFillStyle(3354);
+
+  hmc1->SetFillColor(TColor::GetColor("#5790fc"));
+  hmc1->SetFillStyle(1001);
+  hmc1->SetLineColor(TColor::GetColor("#5790fc"));
+
+  hmc2->SetFillColor(TColor::GetColor("#f89c20"));
+  hmc2->SetFillStyle(1001);
+  hmc2->SetLineColor(TColor::GetColor("#f89c20"));
+
+  hmc3->SetFillColor(TColor::GetColor("#e42536"));
+  hmc3->SetFillStyle(1001);
+  hmc3->SetLineColor(TColor::GetColor("#e42536"));
+
+  hmc4->SetFillColor(TColor::GetColor("#964a8b"));
+  hmc4->SetFillStyle(1001);
+  hmc4->SetLineColor(TColor::GetColor("#964a8b"));
+
+
+  TH1F *totalMC_mod = (TH1F*)totalMC->Clone();
+
+  TH1F *h_data = (TH1F*)h1->Clone();
+  TH1F *hmc1_mod = (TH1F*)hmc1->Clone();
+  TH1F *hmc2_mod = (TH1F*)hmc2->Clone();
+  TH1F *hmc3_mod = (TH1F*)hmc3->Clone();
+  TH1F *hmc4_mod =  (TH1F*)hmc4->Clone();
+
+
+  h1->SetBinErrorOption(TH1::kPoisson);
+
+  int n = h1->GetNbinsX();
+  float q = (1.-0.6827)/2.;
+  float N, dN, yscale;
+  Double_t x[n], y[n], EYlow[n], EYhigh[n], EXlow[n], EXhigh[n];
+  for(int i = 0; i < n; i++){
+    N = h1->GetBinContent(i+1);
+    dN = h1->GetBinError(i+1);
+    if(N > 0. && dN > 0. && abs((dN*dN)/N-1) > 0.0001){
+      yscale = ((dN*dN)/N);
+      N = (N/dN)*(N/dN);
+    }
+    else yscale = 1;
+    x[i] = h1->GetXaxis()->GetBinCenter(i+1);
+    y[i] = yscale*N;
+    if(N > 0) EYlow[i] = yscale*(N - ROOT::Math::chisquared_quantile_c(1-q,2*N)/2.);
+    else EYlow[i] = 0.;
+    EYhigh[i] = yscale*(ROOT::Math::chisquared_quantile_c(q,2*(N+1))/2.- N);
+    EXlow[i] = h1->GetXaxis()->GetBinUpEdge(i+1) - x[i];
+    EXhigh[i] = x[i] - h1->GetXaxis()->GetBinLowEdge(i+1);
+    EXlow[i] = 0.0;
+    EXhigh[i] = 0.0;
+  }
+  TGraphAsymmErrors *hdata1 = new TGraphAsymmErrors(n,x,y,EXlow,EXhigh,EYlow,EYhigh);
+
+
+
+
+ TGraphAsymmErrors* gr_mc_total = new TGraphAsymmErrors();
+
+for (int i = 1; i <= totalMC->GetNbinsX(); ++i) {
+    double x = totalMC->GetBinCenter(i);
+    double ex = totalMC->GetBinWidth(i) / 2.0;
+
+    double mc_val = totalMC->GetBinContent(i);      
+    double stat = totalMC->GetBinError(i);
+
+    double total_err = sqrt(stat * stat);
+
+    gr_mc_total->SetPoint(i - 1, x, mc_val);         
+    gr_mc_total->SetPointError(i - 1, ex, ex, total_err, total_err);
+}
+
+gr_mc_total->SetFillColor(TColor::GetColor("#9c9ca1"));
+gr_mc_total->SetFillStyle(3001);
+gr_mc_total->SetLineColor(TColor::GetColor("#9c9ca1"));
+
+
+  hs->Add(hmc4,"hist");
+  hs->Add(hmc1,"hist");
+  hs->Add(hmc3,"hist");
+  hs->Add(hmc2,"hist");
+
+  hs_mod->Add(hmc4_mod,"hist");
+  hs_mod->Add(hmc1_mod,"hist");
+  hs_mod->Add(hmc3_mod,"hist");
+  hs_mod->Add(hmc2_mod,"hist");
+
+  double a = h1->GetMaximum();
+  hs->Draw("histo");
+
+  gr_mc_total->Draw("E2 SAME");
+
+
+  /*
+  h1->SetLineColor(1);
+  h1->Draw("pez same");
+  h1->SetMarkerSize(0.8);
+  h1->SetMarkerStyle(20);
+  */
+
+
+  hdata1->SetLineColor(kBlack);
+hdata1->SetLineWidth(1);
+hdata1->SetMarkerColor(kBlack);
+hdata1->SetMarkerSize(1.0);  // Bigger markers (was 0.8)
+hdata1->SetMarkerStyle(20);  // Filled circles
+hdata1->Draw("PZ same");
+
+
+hsig1->SetLineColor(TColor::GetColor("#832db6"));
+  hsig1->SetLineWidth(3);
+//  hsig2->SetLineColor(kOrange+2);
+//  hsig2->SetLineWidth(3);
+  hsig31->SetLineColor(TColor::GetColor("#92dadd"));
+  hsig31->SetLineWidth(3);
+  hsig1->Draw("hist same");
+//  hsig2->Draw("hist same");
+  hsig31->Draw("hist same");
+
+
+  
+  hs->GetYaxis()->SetLabelSize(0.05);
+
+  hs->GetYaxis()->SetTitle("Events / 2.0");
+  hs->GetYaxis()->SetTitleOffset(1.0);
+  hs->GetYaxis()->SetTitleSize(0.05);
+  hs->SetMinimum(1.);
+  hs->SetMaximum(10000.);
+  hs->GetXaxis()->SetLabelSize(0);
+  hs->GetXaxis()->SetRangeUser(xmin1,xmax1);
+
+
+  TLegend *legend1 = new TLegend(0.55, 0.5, 0.8, 0.85);
+  legend1->SetTextFont(42);
+  legend1->SetLineColor(0);
+  legend1->SetTextSize(0.04);
+  legend1->SetFillColor(0);
+  legend1->AddEntry(hdata1, "Data", "lep");
+  legend1->AddEntry(hmc4, "Drell-Yan", "f");
+  legend1->AddEntry(hmc1, "t#bar{t}+#gamma+jets", "f");
+  legend1->AddEntry(hmc3, "t#bar{t} (dilepton)", "f");
+  legend1->AddEntry(hmc2, "t#bar{t} (semilepton)", "f");
+  legend1->AddEntry(hsig1, "M_{A} 20 X 20", "l");
+//  legend1->AddEntry(hsig2, "M_{A} 40 X 20", "l");
+  legend1->AddEntry(hsig31, "M_{A} 60 X 20", "l");
+  legend1->Draw();
+
+
+
+  /*
+  TLatex *t2a = new TLatex(0.51,0.9," #bf{CMS} #it{Preliminary}             137 fb^{-1} (13 TeV) ");
+//  TLatex *t2a = new TLatex(0.51,0.9," #bf{CMS} #it{Work in progress}             137 fb^{-1} (13 TeV) ");
+  t2a->SetNDC();
+  t2a->SetTextFont(42);
+  t2a->SetTextSize(0.05);
+  t2a->SetTextAlign(20);
+  t2a->Draw("same");
+*/
+
+
+  TLatex *t2a = new TLatex();
+t2a->SetNDC();
+t2a->SetTextFont(42);
+t2a->SetTextSize(0.05);
+t2a->SetTextAlign(11);  // Left-aligned (11 = left-bottom)
+t2a->DrawLatex(0.14, 0.82, "#bf{CMS} #it{Preliminary}");
+//t2a->DrawLatex(0.14, 0.82, "#bf{CMS}");
+
+// Right side: Luminosity and energy
+TLatex *t2b = new TLatex();
+t2b->SetNDC();
+t2b->SetTextFont(42);
+t2b->SetTextSize(0.05);
+t2b->SetTextAlign(31);  // Right-aligned (31 = right-bottom)
+t2b->DrawLatex(0.9, 0.92, "35.9 fb^{-1} (13 TeV)");
+
+
+
+  c1->cd();
+
+//  TH1F *hist_data = (TH1F*)hdata1->Clone();
+  Double_t ratioy[n], ratioEYlow[n], ratioEYhigh[n], ratioEXlow[n], ratioEXhigh[n];
+
+  for(int i = 0; i < n; i++){
+      double stackcontent = ((TH1F*)(hs->GetStack()->Last()))->GetBinContent(i+1);
+      double stackerror = ((TH1F*)(hs->GetStack()->Last()))->GetBinError(i+1);
+
+      double datacontent = y[i];
+      double dataerrorYup = EYhigh[i];
+      double dataerrorYdn = EYlow[i];
+
+    if( (stackcontent!=0) && (datacontent !=0) ) {
+      ratioy[i] = (datacontent / stackcontent) ;
+      ratioEYhigh[i] = ratioy[i]*sqrt(pow((dataerrorYup/datacontent),2) + pow((stackerror/stackcontent),2));
+      ratioEYlow[i] = ratioy[i]*sqrt(pow((dataerrorYdn/datacontent),2) + pow((stackerror/stackcontent),2));
+      ratioEXlow[i] = 0.0;
+  ratioEXhigh[i] = 0.0;
+
+    }
+  }
+
+
+
+  TGraphAsymmErrors *hist_data = new TGraphAsymmErrors(n,x,ratioy,EXlow,EXhigh,ratioEYlow,ratioEYhigh);
+
+  // Ratio Plot
+
+  TPad *pad2 = new TPad("pad2", "newpad",0,0,1,0.3);
+  pad2->Draw();
+  pad2->cd();
+  pad2->SetTopMargin(0.03);
+  pad2->SetBottomMargin(0.3);
+  pad2->SetRightMargin(0.9);
+  pad2->SetFillStyle(0);
+//  pad2->SetGridx();
+//  pad2->SetGridy();
+  pad2->SetTickx(1);
+  pad2->SetTicky(1);
+//  TLine *line = new TLine(xmin1, 1.,xmax1, 1.);
+//  line->SetLineColor(kBlack);
+//  line->SetLineWidth(1.);
+
+
+  hist_data->SetLineWidth(2);
+hist_data->SetLineColor(kBlack);
+hist_data->SetMarkerStyle(20);  // Filled circles
+hist_data->SetMarkerSize(1.0);  // Bigger markers (was 0.8)
+hist_data->SetMarkerColor(kBlack);
+
+
+  TH1F *band = (TH1F*)totalMC->Clone();
+  band->Divide(totalMC);
+  band->SetFillColor(TColor::GetColor("#9c9ca1"));
+  band->SetLineColor(TColor::GetColor("#9c9ca1"));
+  band->SetFillStyle(1001);
+
+//cout<< totalMC->GetNbinsX() << "  " << h1->GetBinContent(1) << endl;
+
+
+  TH1F *h_JetEnUp; TH1F *h_JetEnDown; TH1F *h_JetResUp; TH1F *h_JetResDown; TH1F *h_UnclusteredEnUp;TH1F *h_UnclusteredEnDown;
+  TGraphAsymmErrors *tottoterree; TGraphAsymmErrors *jererree; TGraphAsymmErrors *erree;
+
+  TGraphAsymmErrors *staterree = (TGraphAsymmErrors*)staterror(h1,totalMC);
+  staterree->SetFillColor(kRed-7);
+  staterree->SetLineColor(kRed-7);
+  staterree->SetFillStyle(1001);
+  band->GetXaxis()->SetTitle("#chi^{2}");
+  band->GetXaxis()->SetLabelSize(0.1);
+  band->GetXaxis()->SetTitleSize(0.12);
+  band->GetXaxis()->SetRangeUser(xmin1,xmax1);
+  band->GetXaxis()->SetTickLength(0.075);
+  band->GetYaxis()->SetTitle("Data / MC");
+  band->GetYaxis()->SetLabelSize(0.1);
+  band->GetYaxis()->SetTitleSize(0.12);
+  band->GetYaxis()->SetNdivisions(505);
+  band->GetYaxis()->SetTitleOffset(0.4);
+  band->GetYaxis()->SetRangeUser(0.0,4.0);
+  band->SetTitle("");
+  band->SetStats(0);
+
+  band->Draw("AXIS");
+
+  const int nb = totalMC->GetNbinsX();
+
+TGraphAsymmErrors *gr = new TGraphAsymmErrors(nb);
+int ip=0;
+for (int i=1;i<=nb;++i){
+  const double mc  = totalMC->GetBinContent(i);
+  const double emc = totalMC->GetBinError(i);
+  const double x   = totalMC->GetXaxis()->GetBinCenter(i);
+  const double bw  = totalMC->GetXaxis()->GetBinWidth(i);
+  const double rel = (mc>0.0)? emc/mc : 0.0;
+
+  gr->SetPoint(ip, x, 1.0);
+  gr->SetPointEXlow(ip,  0.5*bw);    // <-- fills continuously
+  gr->SetPointEXhigh(ip, 0.5*bw);
+  gr->SetPointEYlow(ip,  rel);
+  gr->SetPointEYhigh(ip, rel);
+  ++ip;
+}
+gr->SetFillColor(TColor::GetColor("#a96b59"));
+gr->SetFillStyle(1001);
+gr->SetLineColor(TColor::GetColor("#a96b59"));
+gr->SetLineWidth(0);
+gr->Draw("E2 SAME");
+
+
+
+hist_data->Draw("same p");
+
+
+TLegend* leg_ratio = new TLegend(0.20, 0.80, 0.38, 0.92);
+leg_ratio->SetBorderSize(0);
+leg_ratio->SetTextSize(0.08);
+leg_ratio->AddEntry(gr, "Stat", "f");
+leg_ratio->Draw();
+
+
+
+    // Unity line
+    TLine* line = new TLine(xmin1, 1.0, xmax1, 1.0);
+    line->SetLineStyle(2);
+    line->SetLineColor(kBlack);
+    line->SetLineWidth(1.);
+    line->Draw();
+
+    pad2->RedrawAxis();
+
+
+  c1->SaveAs("chi2_com_v1_test_20.png");
+  c1->SaveAs("chi2_com_v1_test_20.pdf");
+}
